@@ -43,4 +43,7 @@ public abstract class Tweet implements Tweetable {
 
     public abstract Boolean isImportant(); //abstract means there's no implementation
 
+    public String toString() {
+        return this.getMessage();
+    }
 }

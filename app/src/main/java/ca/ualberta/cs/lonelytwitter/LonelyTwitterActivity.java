@@ -1,11 +1,15 @@
 package ca.ualberta.cs.lonelytwitter;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.lang.reflect.Array;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -18,11 +22,18 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
 public class LonelyTwitterActivity extends Activity {
 
 	private static final String FILENAME = "file.sav";
 	private EditText bodyText;
 	private ListView oldTweetsList;
+
+	//Pass an object of tweet, could be single tweet or list of tweet so need to createlist of tweet
+	ArrayList<Tweet> tweetList;
+	ArrayAdapter<Tweet> adapter;
 	
 	/** Called when the activity is first created. */
 	@Override
@@ -30,8 +41,13 @@ public class LonelyTwitterActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 
+		//whenever this function is loaded need to load all saved tweets into our main activity
+
+
 		bodyText = (EditText) findViewById(R.id.body);
 		Button saveButton = (Button) findViewById(R.id.save);
+		Button clearButton = (Button) findViewById(R.id.clear);
+
 		oldTweetsList = (ListView) findViewById(R.id.oldTweetsList);
 
 		saveButton.setOnClickListener(new View.OnClickListener() {
@@ -39,8 +55,24 @@ public class LonelyTwitterActivity extends Activity {
 			public void onClick(View v) {
 				setResult(RESULT_OK);
 				String text = bodyText.getText().toString();
-				saveInFile(text, new Date(System.currentTimeMillis()));
-				finish();
+
+				Tweet tweet = new NormalTweet(text);
+				tweetList.add(tweet);
+				//tell adapter that something has changed to refresh list
+				saveInFile();
+
+				adapter.notifyDataSetChanged();
+
+			}
+		});
+
+		clearButton.setOnClickListener(new View.OnClickListener() {
+
+			public void onClick(View v) {
+				tweetList.clear();
+				saveInFile();
+
+				adapter.notifyDataSetChanged();
 
 			}
 		});
@@ -50,9 +82,9 @@ public class LonelyTwitterActivity extends Activity {
 	protected void onStart() {
 		// TODO Auto-generated method stub
 		super.onStart();
-		String[] tweets = loadFromFile();
-		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
-				R.layout.list_item, tweets);
+		loadFromFile();
+		adapter = new ArrayAdapter<Tweet>(this,
+				R.layout.list_item, tweetList);
 		oldTweetsList.setAdapter(adapter);
 	}
 
@@ -63,16 +95,19 @@ public class LonelyTwitterActivity extends Activity {
 		moodList.add(sadMood);
 		try {
 			FileInputStream fis = openFileInput(FILENAME);
-			BufferedReader in = new BufferedReader(new InputStreamReader(fis));
-			String line = in.readLine();
-			while (line != null) {
-				tweets.add(line);
-				line = in.readLine();
-			}
+			BufferedReader in = new BufferedReader(new InputStreamReader(fis)); //reading file line by line
+
+			Gson gson = new Gson(); //library to save objects
+			Type listType = new TypeToken<ArrayList<NormalTweet>>(){}.getType();
+
+
+
+			tweetList = gson.fromJson(in, listType);
+
 
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			tweetList = new ArrayList<Tweet>();
+
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -80,12 +115,20 @@ public class LonelyTwitterActivity extends Activity {
 		return tweets.toArray(new String[tweets.size()]);
 	}
 	
-	private void saveInFile(String text, Date date) {
+	private void saveInFile() {
 		try {
+
 			FileOutputStream fos = openFileOutput(FILENAME,
-					Context.MODE_APPEND);
-			fos.write(new String(date.toString() + " | " + text)
-					.getBytes());
+					Context.MODE_PRIVATE);
+
+
+			BufferedWriter out = new BufferedWriter(new OutputStreamWriter(fos));
+
+			Gson gson = new Gson();
+			gson.toJson(tweetList, out);
+			out.flush();
+
+
 			fos.close();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
