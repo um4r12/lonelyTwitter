@@ -9,7 +9,7 @@ public class Sad extends Mood {
 
     Sad() {
         // Need to initialize everything, set everything that exists for that object
-        this.message = "I am sad";    // this is like self in python
+        this.message = "I am sad!";    // this is like self in python
     }
 
     public String getMood() {return this.message;}
