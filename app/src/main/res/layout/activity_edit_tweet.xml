@@ -11,10 +11,10 @@
     tools:context="ca.ualberta.cs.lonelytwitter.EditTweetActivity">
 
     <TextView
-        android:text="TextView"
+        android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
         android:layout_alignParentStart="true"
-        android:id="@+id/textView" />
+        android:layout_alignParentTop="true"
+        android:text="@string/textview" />
 </RelativeLayout>
